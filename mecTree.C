@@ -49,11 +49,24 @@ void mecTree::Loop()
 
    const int kPdgGamma            =    22; // photon
 
-   double neutronMass = 0.939565;   
+   double neutronMass = 0.939565;
+   double protonMass  = 0.938272;
+   double pionMass    = 0.139570;
+   double kaonMass    = 0.493677;
+   double kaon0Mass   = 0.497611;
 
+   double e_h = 1.27;
+   
    Double_t Eavail;
+   Double_t Eshw;
+   Double_t Ehad;
+   Double_t Ehadstar;
+   Double_t hMass;
 
-   TBranch* bEavail = fChain->Branch("Eavail",&Eavail,"Eavail/D");
+   //TBranch* bEavail = fChain->Branch("Eavail",&Eavail,"Eavail/D");
+   TBranch* bEshw   = fChain->Branch("Eshw",&Eshw,"Eshw/D");
+   TBranch* bEhad   = fChain->Branch("Ehad",&Ehad,"Ehad/D");
+   TBranch* bEhadstar = fChain->Branch("Ehadstar",&Ehadstar,"Ehadstar/D");
    
    Long64_t nentries = fChain->GetEntriesFast();
 
@@ -64,31 +77,99 @@ void mecTree::Loop()
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
       Eavail=calresp0;
+      Eshw=0.;
+      Ehad=0;
+      Ehadstar=0;
       for(int j = 0; j < nf; j++)
         {
-          if ( pdgf[j] == kPdgNeutron)
+	  hMass = TMath::Sqrt(Ef[j]*Ef[j] - pf[j]*pf[j]);
+	  Ehad += Ef[j];
+	  if ( pdgf[j] == kPdgProton)
+	  {
+	    Eshw += 1./e_h* (Ef[j] - protonMass);
+	    Ehadstar += (Ef[j] - protonMass);
+	  }
+	  else if ( pdgf[j] == kPdgAntiProton)
+	  {
+	    Eshw += (1./e_h* Ef[j] + 2.*protonMass);
+	    Ehadstar += Ef[j];
+	  }
+          else if ( pdgf[j] == kPdgNeutron)
 	  {
 	    Eavail -= (Ef[j] - neutronMass);
+	    Eshw   += 1./(e_h)* (Ef[j] - neutronMass);
+	    Ehadstar += (Ef[j] - neutronMass);
+	  }
+	  else if ( pdgf[j] == kPdgAntiNeutron)
+	  {
+	    Eshw   += (1./(e_h)* Ef[j] + 2.* neutronMass);
+	    Ehadstar   += Ef[j];
+	  }
+	  else if ( pdgf[j] == kPdgPiP )
+	  {
+	    Eshw += 1./e_h * (Ef[j] - pionMass);
+	    Ehadstar += Ef[j] - pionMass;
+	  }
+	  else if ( pdgf[j] == kPdgPiM )
+	  {
+	    Eshw += 1./e_h * (Ef[j] - pionMass);
+	    Ehadstar += Ef[j] - pionMass;
 	  }
 	  else if ( pdgf[j] == kPdgPi0 )
 	  {
 	    Eavail -= 0.3 * Ef[j];
+	    Eshw   += Ef[j];
+	    Ehadstar   += Ef[j];
 	  }
+	  else if (pdgf[j] == kPdgKP)
+	  {
+	    Eshw += 1./e_h * (Ef[j] - kaonMass);
+	    Ehadstar += (Ef[j] - kaonMass);
+	  }
+	  else if (pdgf[j] == kPdgKM)
+	  {
+	    Eshw += 1./e_h * (Ef[j] - kaonMass);
+	    Ehadstar += (Ef[j] - kaonMass);
+	  }
+	  else if (pdgf[j] == kPdgK0)
+	  {
+	    Eshw += 1./e_h * (Ef[j] - kaon0Mass);
+	    Ehadstar += (Ef[j] - kaon0Mass);
+	  }
+	  else if (pdgf[j] == kPdgAntiK0)
+	  {
+	    Eshw += 1./e_h * (Ef[j] - kaon0Mass);
+	    Ehadstar += (Ef[j] - kaon0Mass);
+	  }	  
 	  else if ( pdgf[j] == kPdgGamma )
 	  {
 	    Eavail -= 0.3 * Ef[j];
+	    Eshw   += Ef[j];
+	    Ehadstar   += Ef[j];
 	  }
 	  else if ( pdgf[j] == kPdgElectron )
 	  {
 	    Eavail -= 0.3 * Ef[j];
+	    Eshw   += Ef[j];
+	    Ehadstar   += Ef[j];
 	  }
 	  else if ( pdgf[j] == kPdgPositron )
 	  {
 	    Eavail -= 0.3 * Ef[j];
-	  }	  
+	    Eshw   += Ef[j];
+	    Ehadstar   += Ef[j];
+	  }
+	  else{
+
+	    Eshw += Ef[j] - hMass;
+	    Ehadstar += Ef[j] - hMass;
+
+	  }
 
         }
-      bEavail->Fill();
+      bEhad->Fill();
+      bEhadstar->Fill();
+      bEshw->Fill();
    }
 
    fChain->Write();
