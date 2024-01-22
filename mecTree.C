@@ -4,6 +4,28 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 
+
+bool isIon(int pdgCode){
+  int kIonBase = 1000000000;
+  int kIonEnd  = 2000000000;
+  return (pdgCode > kIonBase) && (pdgCode < kIonEnd);
+
+}
+
+bool isBaryon(int pdgCode){
+
+  return pdgCode/1000%10;
+
+}
+
+bool isMuon(int pdgCode){
+  int kMuon = 13;
+
+  return (pdgCode == kMuon || pdgCode == -kMuon);
+
+}
+
+
 void mecTree::Loop()
 {
 //   In a ROOT session, you can do:
@@ -59,11 +81,18 @@ void mecTree::Loop()
    
    Double_t Eavail;
    Double_t Eshw;
+   Double_t EshwMINOS;
    Double_t Ehad;
    Double_t Ehadstar;
    Double_t hMass;
 
+   bool saw_mu2 = false;
+   Double_t Emu2;
+
+   //TODO: reinstate the bEavail branch?
    //TBranch* bEavail = fChain->Branch("Eavail",&Eavail,"Eavail/D");
+   TBranch* bEmu2   = fChain->Branch("Emu2",&Emu2,"Emu2/D");
+   TBranch* bEshwMINOS = fChain->Branch("EshwMINOS",&EshwMINOS,"EshwMINOS/D");
    TBranch* bEshw   = fChain->Branch("Eshw",&Eshw,"Eshw/D");
    TBranch* bEhad   = fChain->Branch("Ehad",&Ehad,"Ehad/D");
    TBranch* bEhadstar = fChain->Branch("Ehadstar",&Ehadstar,"Ehadstar/D");
@@ -78,11 +107,44 @@ void mecTree::Loop()
       // if (Cut(ientry) < 0) continue;
       Eavail=calresp0;
       Eshw=0.;
+      EshwMINOS=0;
       Ehad=0;
       Ehadstar=0;
+      Emu2 = 0.;
+      saw_mu2 = false;
+      
       for(int j = 0; j < nf; j++)
         {
 	  hMass = TMath::Sqrt(Ef[j]*Ef[j] - pf[j]*pf[j]);
+	  if(isBaryon(pdgf[j]) || isIon(pdgf[j])){
+	    EshwMINOS += (Ef[j] - hMass);
+	  }
+	  else if( isMuon(pdgf[j]) && !saw_mu2){
+	    saw_mu2 = true;
+	    Emu2 = Ef[j];
+	  }
+	  else if (isMuon(pdgf[j]) && saw_mu2 && Ef[j] > Emu2){
+	    EshwMINOS += Emu2;
+	    Emu2 = Ef[j];
+	  }
+	  else{
+	    EshwMINOS += Ef[j];
+
+	  }
+	  /*
+	  if (isMuon(pdgf[j]) && cc){
+	    std::cout << "Hadronic system contains a muon ... index = " << j << std::endl;
+	    std::cout << "El = " << El << " and Emu = " << Ef[j] << std::endl;
+	    if (El < Ef[j]){
+	      std::cout << "Ev  = " << Ev  << std::endl;
+	      std::cout << "QE  = " << qel << std::endl;
+	      std::cout << "RES = " << res << std::endl;
+	      std::cout << "MEC = " << mec << std::endl;
+	      std::cout << "DIS = " << dis << std::endl;
+	      std::cout << "COH = " << coh << std::endl;
+	    }
+	  }
+	  */
 	  Ehad += Ef[j];
 	  if ( pdgf[j] == kPdgProton)
 	  {
@@ -170,6 +232,8 @@ void mecTree::Loop()
       bEhad->Fill();
       bEhadstar->Fill();
       bEshw->Fill();
+      bEmu2->Fill();
+      bEshwMINOS->Fill();
    }
 
    fChain->Write();

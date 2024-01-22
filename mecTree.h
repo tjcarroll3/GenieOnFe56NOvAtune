@@ -232,9 +232,9 @@ mecTree::mecTree(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("gntp.60406375.60406474.Run3.ND.norw.numu.resfixfix.Eavail.Eshw.gst.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/Users/tcarroll/Downloads/gntp.60406375.60406474.Run3.ND.norw.numu.resfixfix.Eavail.Eshw.gst.test.root");
       if (!f || !f->IsOpen()) {
-	f = new TFile("gntp.60406375.60406474.Run3.ND.norw.numu.resfixfix.Eavail.Eshw.gst.root","update");
+	f = new TFile("/Users/tcarroll/Downloads/gntp.60406375.60406474.Run3.ND.norw.numu.resfixfix.Eavail.Eshw.gst.test.root","update");
       }
       f->GetObject("gst",tree);
 
