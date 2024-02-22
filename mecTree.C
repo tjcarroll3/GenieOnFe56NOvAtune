@@ -89,8 +89,8 @@ void mecTree::Loop()
    bool saw_mu2 = false;
    Double_t Emu2;
 
-   //TODO: reinstate the bEavail branch?
-   //TBranch* bEavail = fChain->Branch("Eavail",&Eavail,"Eavail/D");
+   
+   TBranch* bEavail = fChain->Branch("Eavail",&Eavail,"Eavail/D");
    TBranch* bEmu2   = fChain->Branch("Emu2",&Emu2,"Emu2/D");
    TBranch* bEshwMINOS = fChain->Branch("EshwMINOS",&EshwMINOS,"EshwMINOS/D");
    TBranch* bEshw   = fChain->Branch("Eshw",&Eshw,"Eshw/D");
@@ -233,6 +233,7 @@ void mecTree::Loop()
       bEhadstar->Fill();
       bEshw->Fill();
       bEmu2->Fill();
+      bEavail->Fill();
       bEshwMINOS->Fill();
    }
 
